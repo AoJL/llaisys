@@ -53,3 +53,21 @@ __all__ = [
     "MemcpyKind",
     "llaisysStream_t",
 ]
+
+# 注册模型创建函数
+LIB_LLAISYS.llaisys_qwen2_create.restype = ctypes.c_void_p
+
+# 注册权重加载函数
+LIB_LLAISYS.llaisys_qwen2_load_weight.argtypes = [
+    ctypes.c_void_p, # model handle
+    ctypes.c_char_p, # name
+    ctypes.c_void_p  # tensor handle
+]
+
+# 注册推理函数
+LIB_LLAISYS.llaisys_qwen2_infer.argtypes = [
+    ctypes.c_void_p, # model handle
+    ctypes.c_void_p, # input_ids tensor handle
+    ctypes.c_int     # start_pos
+]
+LIB_LLAISYS.llaisys_qwen2_infer.restype = ctypes.c_void_p # 返回生成的 logits tensor 句柄

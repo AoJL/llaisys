@@ -1,42 +1,44 @@
-#ifndef LLAISYS_MODELS_QWEN2_H
-#define LLAISYS_MODELS_QWEN2_H
+#pragma once
 
-#include "../tensor.h"
+#include <map>
+#include <string>
+#include <vector>
+#include <memory>
 
-__C {
-    struct LlaisysQwen2Meta {
-        llaisysDataType_t dtype;
-        size_t nlayer, hs, nh, nkvh, dh, di, maxseq, voc;
-        float epsilon, theta;
-        int64_t end_token;
-    };
+// 核心：不要包含 include/llaisys/tensor.h，因为它只是 C 接口
+// 我们需要包含你在 Assignment 1 实现的真正的 Tensor 类头文件
+// 假设它的路径是下面这个（如果不对，请根据你的文件树调整）
+#include "tensor/tensor.hpp" 
 
-    struct LlaisysQwen2Weights {
-        llaisysTensor_t in_embed;
-        llaisysTensor_t out_embed;
-        llaisysTensor_t out_norm_w;   // a.k.a. model.norm.weight
-        llaisysTensor_t *attn_norm_w; // a.k.a. input_layernorm.weight
-        llaisysTensor_t *attn_q_w;
-        llaisysTensor_t *attn_q_b;
-        llaisysTensor_t *attn_k_w;
-        llaisysTensor_t *attn_k_b;
-        llaisysTensor_t *attn_v_w;
-        llaisysTensor_t *attn_v_b;
-        llaisysTensor_t *attn_o_w;
-        llaisysTensor_t *mlp_norm_w; // a.k.a. post_attention_layernorm.weight
-        llaisysTensor_t *mlp_gate_w;
-        llaisysTensor_t *mlp_up_w;
-        llaisysTensor_t *mlp_down_w;
-    };
+namespace llaisys {
 
-    struct LlaisysQwen2Model;
+// 使用我们在 Assignment 1 中定义的别名
+// 如果 tensor.hpp 里已经定义了，这里可以不写，或者写成：
+// using tensor_t = std::shared_ptr<Tensor>;
 
-    __export struct LlaisysQwen2Model *llaisysQwen2ModelCreate(const LlaisysQwen2Meta *meta, llaisysDeviceType_t device, int *device_ids, int ndevice);
+class Qwen2Model {
+public:
+    Qwen2Model() = default;
+    ~Qwen2Model() = default;
 
-    __export void llaisysQwen2ModelDestroy(struct LlaisysQwen2Model * model);
+    void load_weight(const std::string& name, tensor_t weight) {
+        _weights[name] = weight;
+    }
 
-    __export struct LlaisysQwen2Weights *llaisysQwen2ModelWeights(struct LlaisysQwen2Model * model);
+    tensor_t forward(tensor_t input_ids, int start_pos);
 
-    __export int64_t llaisysQwen2ModelInfer(struct LlaisysQwen2Model * model, int64_t * token_ids, size_t ntoken);
+private:
+    std::map<std::string, tensor_t> _weights;
+    // 用于 KV Cache
+    std::map<int, tensor_t> _k_cache; 
+    std::map<int, tensor_t> _v_cache;
+};
+
+// C 接口：供 python/llaisys/models/qwen2.py 调用
+extern "C" {
+    void* llaisys_qwen2_create();
+    void llaisys_qwen2_load_weight(void* model, const char* name, void* tensor_ptr);
+    void* llaisys_qwen2_infer(void* model, void* input_ids_ptr, int start_pos);
 }
-#endif // LLAISYS_MODELS_QWEN2_H
+
+} // namespace llaisys

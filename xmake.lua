@@ -97,6 +97,8 @@ target_end()
 
 target("llaisys")
     set_kind("shared")
+    add_includedirs("src")
+    add_includedirs("include")
     add_deps("llaisys-utils")
     add_deps("llaisys-device")
     add_deps("llaisys-core")
@@ -106,6 +108,8 @@ target("llaisys")
     set_languages("cxx17")
     set_warnings("all", "error")
     add_files("src/llaisys/*.cc")
+    add_files("src/llaisys/models/*.cpp")
+    add_files("src/ops/add/**.cpp")
     set_installdir(".")
 
     
